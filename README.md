@@ -128,8 +128,9 @@ nameserver 1.1.1.1
 ```
 The parameters here are drawn from the ```inventory``` file.
 
-**/etc/hostname*:**
-```hostname_from_the_inventory_file
+**/etc/hostname:**
+```
+hostname_from_the_inventory_file
 ```
 
 ## Issues and support
