@@ -74,7 +74,7 @@ helm_version: 2.12.1 #Helm Version
 Edit ```/ansible/group_vars/inventory``` as follows:
 ```
 [masters]
-demo-m1 ansible_host=192.0.2.2 - master node's hostname and IP address
+demo-m1 ansible_host=192.0.2.2 - master node's hostname and IP address. Here and below nodes' current hostnames will be overridden with the ones specified in this config file.
 #etc
 
 [slaves]
@@ -108,6 +108,29 @@ To install Helm, run:
 ansible-playbook -i inventory deploy-app.yaml --tags "app-helm"
 ```
 To manage the cluster remotely, install ```helm``` locally and copy ```.kube/helm``` from the master node to ```.kube/helm``` on your local machine. Then run helm commands with --tls flag.
+
+## Additional notes
+During installation Containerum Elements overrides the following config files on each node:
+
+**/etc/resolv.conf:**
+
+```
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+nameserver 1.1.1.1
+```
+
+**/etc/hosts:**
+```
+192.0.2.2 demo-m1
+192.0.2.3 demo-s1
+192.0.2.4 demo-s2
+```
+The parameters here are drawn from the ```inventory``` file.
+
+**/etc/hostname*:**
+```hostname_from_the_inventory_file
+```
 
 ## Issues and support
 Containerum Element has been tested on VMs in the following clouds:
