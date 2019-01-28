@@ -1,0 +1,14 @@
+[masters]
+demo-m1 ansible_host=192.0.2.2
+
+[slaves]
+demo-s1 ansible_host=192.0.2.3
+demo-s2 ansible_host=192.0.2.4
+
+[etcd]
+demo-m1 ansible_host=192.0.2.2
+demo-s1 ansible_host=192.0.2.3
+demo-s2 ansible_host=192.0.2.4
+
+[local]
+localhost ansible_connection=local

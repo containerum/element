@@ -1,0 +1,38 @@
+cloud_external_ip: 198.51.100.100
+k8s_api_external_port: 6443
+cloud_internal_ip: 192.0.2.2
+SERVICE_CLUSTER_IP_RANGE: 10.96.0.0/16
+SERVICE_NODE_PORT_RANGE: "30000-32767"
+CLUSTER_CIDR: 192.168.0.0/16
+KUBELET_RUNTIME: remote
+KUBELET_RUNTIME_ENDPOINT: "unix:///var/run/crio/crio.sock"
+IP_AUTODETECTION_METHOD_NIC: eth0
+
+ansible_user: centos
+
+## settings fs
+# master server
+#dev_master_log: /dev/sdb
+
+# slave server
+#dev_slave_log: /dev/sdb
+#dev_slave_containers: /dev/sdd
+
+# etcd server
+#dev_etcd_log: /dev/sdb
+#dev_etcd_data_etcd: /dev/sdc
+
+# CA cert env
+cert_ca_country: "RU"
+cert_ca_organization: "DC_k8s_demo"
+cert_ca_organization_unit: "DEMO_K8S"
+cert_ca_locality: "MSK"
+cert_ca_validity_days: 1024
+cert_ca_key_size: 4096
+
+#cert env
+cert_cluster_name: "k8s demo setup"
+cert_validity_days: 365
+cert_key_size: 2048
+
+helm_version: 2.12.1

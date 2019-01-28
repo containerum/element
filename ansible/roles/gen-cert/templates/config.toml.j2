@@ -1,0 +1,30 @@
+cluster_name = "{{ cert_cluster_name }}"
+validity_days = {{ cert_validity_days }}
+key_size = {{ cert_key_size }}
+
+master_san = ["{{ cloud_external_ip }}", {% for host in groups['masters'] -%}"{{ hostvars[host]['ansible_host'] }}", "{{ host }}"{% if not loop.last -%}, {% endif %}{%- endfor %}]
+
+{% for host in groups['slaves'] %}
+[[worker]]
+filename = "{{ host }}"
+hostname = "{{ host }}"
+san = ["{{ hostvars[host]['ansible_host'] }}", "{{ host }}"]
+
+{% endfor %}
+
+
+{% for host in groups['etcd'] %}
+[[etcd_server]]
+filename = "{{ host }}-etcd"
+hostname = "{{ host }}"
+san = ["{{ hostvars[host]['ansible_host'] }}", "{{ host }}"]
+
+{% endfor %}
+
+[ca]
+country = "{{ cert_ca_country }}"
+organization = "{{ cert_ca_organization }}"
+organization_unit = "{{ cert_ca_organization_unit }}"
+locality = "{{ cert_ca_locality  }}"
+validity_days = {{ cert_ca_validity_days }}
+key_size = {{ cert_ca_key_size }}

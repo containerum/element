@@ -1,0 +1,6 @@
+- name: Install ETCD
+  yum:
+    name: etcd
+    state: latest
+  become: yes
+

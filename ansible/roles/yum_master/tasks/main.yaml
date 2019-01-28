@@ -1,0 +1,40 @@
+- name: Add repository
+  yum_repository:
+    name: "exonlab-kubernetes1_11"
+    description: "Exon lab kubernetes repo for CentOS"
+    baseurl: https://s3-eu-west-1.amazonaws.com/packages.containerum/kubernetes_pkg/1.11/centos/$releasever/$basearch/
+    enabled: yes
+    skip_if_unavailable: no
+    repo_gpgcheck: no
+    gpgcheck: yes
+    gpgkey: https://s3-eu-west-1.amazonaws.com/packages.containerum/RPM-GPG-KEY-exonlab
+  become: yes
+
+- name: remove the firewalld package
+  yum:
+    name: firewalld
+    state: absent
+  become: yes
+
+- name: Install epel
+  yum:
+    name:
+      - epel-release
+    update_cache: yes
+    state: latest
+  become: yes
+
+- name: Install a list of packages
+  yum:
+    name:
+      - vim
+      - mc
+      - tcpdump
+      - ntp
+      - open-vm-tools
+      - kubernetes-kubectl
+      - kubernetes-master-meta
+      - bird
+    update_cache: yes
+    state: latest
+  become: yes

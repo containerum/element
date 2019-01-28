@@ -1,0 +1,31 @@
+- name: Stat certs
+  stat:
+    path: ./certs
+  register: certs_dir
+
+- name: Archive certs dir
+  archive:
+    path: ./certs/*
+    dest: ./certs_{{ ansible_date_time.iso8601_basic_short }}.tar
+    remove: yes
+    format: tar
+  when: certs_dir.stat.isdir is defined and certs_dir.stat.isdir
+
+- name: Creates certs directory
+  file:
+    path: ./certs
+    state: directory
+  delegate_to: localhost
+
+- name: Generate cert-machine config config.toml
+  template: src=config.toml.j2
+        dest="./certs/config.toml"
+  delegate_to: localhost
+
+- name: Generate certs
+  command: cert-machine -c ./certs/config.toml -O ./certs new
+  delegate_to: localhost
+  register: generate_info
+
+- debug: msg="{{ generate_info.stdout_lines }}"
+- debug: msg="{{ generate_info.stderr_lines }}"

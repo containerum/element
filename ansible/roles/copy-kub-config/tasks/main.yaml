@@ -1,0 +1,66 @@
+- name: Copy certs and config for master servers to data-dir
+  command: cp -R -L ./certs/master/ ./certs/{{ item }}-data
+  loop: "{{ groups['masters'] }}"
+
+- name: Copy certs and config for slave servers to data-dir
+  command: cp -R -L ./certs/{{ item }}/ ./certs/{{ item }}-data
+  loop: "{{ groups['slaves'] }}"
+
+- name: Copy kube-proxy conf for slave servers to data-dir
+  command: cp ./certs/kube-proxy.kubeconfig ./certs/{{ item }}-data
+  loop: "{{ groups['slaves'] }}"
+
+- name: Copy certs and config for etcd servers to data-dir
+  command: cp -R -L ./certs/{{ item }}-etcd/ ./certs/{{ item }}-etcd-data
+  loop: "{{ groups['etcd'] }}"
+
+- name: Archive masters certs/config dir
+  archive:
+    path: ./certs/{{ item }}-data/
+    dest: ./certs/{{ item }}.tar.gz
+  loop: "{{ groups['masters'] }}"
+
+- name: Archive slave certs/config dir
+  archive:
+    path: ./certs/{{ item }}-data/
+    dest: ./certs/{{ item }}.tar.gz
+  loop: "{{ groups['slaves'] }}"
+
+- name: Archive etcd certs/config dir
+  archive:
+    path: ./certs/{{ item }}-etcd-data/
+    dest: ./certs/{{ item }}-etcd.tar.gz
+  loop: "{{ groups['etcd'] }}"
+
+- name: Delete data dir master
+  file:
+    path: ./certs/{{ item }}-data/
+    state: absent
+  loop: "{{ groups['masters'] }}"
+
+- name: Delete data dir slave
+  file:
+    path: ./certs/{{ item }}-data/
+    state: absent
+  loop: "{{ groups['slaves'] }}"
+
+- name: Delete data dir etcd
+  file:
+    path: ./certs/{{ item }}-etcd-data/
+    state: absent
+  loop: "{{ groups['etcd'] }}"
+
+- name: Copy certs and config to masters
+  copy: src=./certs/{{ item }}.tar.gz dest=~/
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['masters'] }}"
+
+- name: Copy certs and config to slaves
+  copy: src=./certs/{{ item }}.tar.gz dest=~/
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['slaves'] }}"
+
+- name: Copy certs and config to etcd
+  copy: src=./certs/{{ item }}-etcd.tar.gz dest=~/
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['etcd'] }}"

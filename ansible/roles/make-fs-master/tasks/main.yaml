@@ -1,0 +1,22 @@
+- name: Create a xfs filesystem on {{ dev_master_log }} from /var/log/
+  filesystem:
+    fstype: xfs
+    dev:  "{{ dev_master_log }}"
+  become: yes
+  when: dev_master_log is defined
+
+- name: Get device  {{ dev_master_log }} UUID
+  shell: blkid  "{{ dev_master_log }}" -o export | grep UUID
+  register: uuid_sdb
+  become: yes
+  when: dev_master_log is defined
+
+- name: Mount device  {{ dev_master_log }} to /var/log/ by UUID
+  mount:
+    path: /var/log
+    src: "{{ uuid_sdb.stdout }}"
+    fstype: xfs
+    backup: yes
+    state: present
+  become: yes
+  when: dev_master_log is defined

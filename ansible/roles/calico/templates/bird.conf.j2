@@ -1,0 +1,55 @@
+
+log syslog {{ '{' }} trace, info, remote, warning, error, auth, fatal, bug {{ '}' }};
+log stderr all;
+
+
+router id {{ ansible_host }}; # master internal ip
+
+# push all incoming routes to kernel routing table
+protocol kernel {{ '{' }}
+  persist;            # save routes on bird shutdown
+  scan time 2;
+  export all;         # export all incoming routes to kernel
+  graceful restart;
+{{ '}' }}
+
+# scan interfaces
+protocol device {{ '{' }}
+  debug {{ '{' }} states {{ '}' }};
+  scan time 2;
+{{ '}' }}
+
+protocol direct {{ '{' }}
+  debug {{ '{' }} states {{ '}' }};
+  interface "{{ IP_AUTODETECTION_METHOD_NIC }}";  # master internal interface
+                       # should be the same as configured
+                       # for Calico communication
+{{ '}' }}
+
+# apply incoming routes to pod subnet
+filter main_filter {{ '{' }}
+      if net ~ {{ CLUSTER_CIDR }} then accept; # use your POD CIDR
+      else reject;
+{{ '}' }}
+
+# BGP rule template
+template bgp bgp_template {{ '{' }}
+  debug {{ '{' }} states {{ '}' }};
+  description "Connection to BGP peer";
+  local as 63400;      # same as Calico host AS
+  multihop;            # allow connection to neighbor through router
+  gateway recursive;   # allow routes through router
+  import filter main_filter; # apply filter
+  next hop self;       # advertise our ip as next hop
+  source address {{ ansible_host }}; # master internal ip
+  add paths on;        # allow multiple routes to same subnet
+  graceful restart;
+{{ '}' }}
+
+# list of BGP peers (kubernetes nodes)
+{% for host in groups['slaves'] %}
+protocol bgp {{ (hostvars[host]['inventory_hostname'])|replace('-','_') }} from bgp_template {{ '{' }}
+  neighbor {{ hostvars[host]['ansible_host'] }} as 63400;
+{{ '}' }}
+
+{% endfor %}

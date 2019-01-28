@@ -1,0 +1,45 @@
+- name: Create a xfs filesystem on {{ dev_etcd_log }} from /var/log/
+  filesystem:
+    fstype: xfs
+    dev: "{{ dev_etcd_log }}"
+  become: yes
+  when: dev_etcd_log is defined
+
+- name: Create a xfs filesystem on {{ dev_etcd_data_etcd }} from /var/lib/etcd/
+  filesystem:
+    fstype: xfs
+    dev:  "{{ dev_etcd_data_etcd }}"
+  become: yes
+  when: dev_etcd_data_etcd is defined
+
+- name: Get device {{ dev_etcd_log }} UUID
+  shell: blkid "{{ dev_etcd_log }}" -o export | grep UUID
+  register: uuid_sdb
+  become: yes
+  when: dev_etcd_log is defined
+
+- name: Get device {{ dev_etcd_data_etcd }} UUID
+  shell: blkid "{{ dev_etcd_data_etcd }}" -o export | grep UUID
+  register: uuid_sdc
+  become: yes
+  when: dev_etcd_data_etcd is defined
+
+- name: Mount device {{ dev_etcd_log }} to /var/log/ by UUID
+  mount:
+    path: /var/log
+    src: "{{ uuid_sdb.stdout }}"
+    fstype: xfs
+    backup: yes
+    state: present
+  become: yes
+  when: dev_etcd_log is defined
+
+- name: Mount device {{ dev_etcd_data_etcd }} to /var/lib/etcd by UUID
+  mount:
+    path: /var/lib/etcd
+    src: "{{ uuid_sdc.stdout }}"
+    fstype: xfs
+    backup: yes
+    state: present
+  become: yes
+  when: dev_etcd_data_etcd is defined

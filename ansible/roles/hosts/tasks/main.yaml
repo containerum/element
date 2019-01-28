@@ -1,0 +1,26 @@
+- name: Set hostname {{ inventory_hostname }}
+  raw: hostnamectl set-hostname {{ inventory_hostname }}
+  become: yes
+
+- name: Generate & copy hosts file to servers
+  template:
+    src=hosts.j2
+    dest=/etc/hosts
+  become: yes
+
+- name: Generate & copy resolv.conf to servers
+  template:
+    src=resolv.conf
+    dest=/etc/resolv.conf
+  become: yes
+
+- name: Remove swapfile from /etc/fstab
+  mount:
+    name: swap
+    fstype: swap
+    state: absent
+  become: yes
+- name: Disable swap
+  command: swapoff -a
+  when: ansible_swaptotal_mb > 0
+  become: yes

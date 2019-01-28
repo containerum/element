@@ -1,0 +1,6 @@
+ADVERTISE_ADDRESS={{ ansible_host }}
+BIND_ADDRESS=0.0.0.0
+ETCD_SERVERS={% for host in groups['etcd'] -%}https://{{ hostvars[host]['ansible_host'] }}:2379{% if not loop.last -%},{% endif %}{%- endfor %}
+
+SERVICE_CLUSTER_IP_RANGE={{ SERVICE_CLUSTER_IP_RANGE }}
+SERVICE_NODE_PORT_RANGE={{ SERVICE_NODE_PORT_RANGE }}
