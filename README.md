@@ -138,7 +138,7 @@ Containerum Element has been tested with:
 
 If you have found a bug, please open an issue. If you have questions about Containerum Element or Kubernetes Distribution by Containerum, you can join us on [Telegram](https://t.me/containerum).
 
-You will also find lots of useful information on Kubernetes on our [Medium blog](www.medium.com/containerum).
+You will also find lots of useful information on Kubernetes on our [Medium blog](https://medium.com/containerum).
 
 
 ## License
