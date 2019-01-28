@@ -1,0 +1,47 @@
+- name: Create a xfs filesystem on {{ dev_slave_log }} from /var/log/
+  filesystem:
+    fstype: xfs
+    dev: "{{ dev_slave_log }}"
+  become: yes
+  when: dev_slave_log is defined
+
+- name: Create a xfs filesystem on {{ dev_slave_containers }} from /var/lib/containers
+  filesystem:
+    force: yes
+    fstype: xfs
+    dev: "{{ dev_slave_containers }}"
+    opts: -n ftype=1
+  become: yes
+  when: dev_slave_containers is defined
+
+- name: Get device  UUID {{ dev_slave_log }}
+  shell: blkid "{{ dev_slave_log }}" -o export | grep UUID
+  register: uuid_sdb
+  become: yes
+  when: dev_slave_log is defined
+
+- name: Get device {{ dev_slave_containers }} UUID
+  shell: blkid "{{ dev_slave_containers }}" -o export | grep UUID
+  register: uuid_sdd
+  become: yes
+  when: dev_slave_containers is defined
+
+- name: Mount device {{ dev_slave_log }} to /var/log/ by UUID
+  mount:
+    path: /var/log
+    src: "{{ uuid_sdb.stdout }}"
+    fstype: xfs
+    backup: yes
+    state: present
+  become: yes
+  when: dev_slave_log is defined
+
+- name: Mount device {{ dev_slave_containers }} to /var/lib/containers by UUID
+  mount:
+    path: /var/lib/containers
+    src: "{{ uuid_sdd.stdout }}"
+    fstype: xfs
+    backup: yes
+    state: present
+  become: yes
+  when: dev_slave_containers is defined

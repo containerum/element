@@ -1,0 +1,75 @@
+- hosts: local
+  roles:
+    - gen-cert
+
+- hosts: local
+  roles:
+    - gen-kub-config
+
+- hosts: local
+  roles:
+    - copy-kub-config
+
+- hosts: masters
+  roles:
+    - make-fs-master
+
+- hosts: slaves
+  roles:
+    - make-fs-slave
+
+- hosts: etcd
+  roles:
+    - make-fs-etcd
+
+- hosts: masters:slaves
+  roles:
+    - disable-selinux
+
+- hosts: masters:slaves
+  roles:
+    - sysctl
+
+- hosts: masters:slaves:etcd
+  roles:
+    - hosts
+
+- hosts: masters:slaves:etcd
+  roles:
+    - reboot
+
+- hosts: masters
+  roles:
+    - yum_master
+
+- hosts: slaves
+  roles:
+    - yum_slave
+
+- hosts: etcd
+  roles:
+    - yum_etcd
+
+- hosts: masters:slaves:etcd
+  roles:
+    - reboot
+
+- hosts: etcd
+  roles:
+    - etcd
+
+- hosts: masters
+  roles:
+    - master
+
+- hosts: slaves
+  roles:
+    - slaves
+
+- hosts: masters
+  roles:
+    - calico
+
+- hosts: masters
+  roles:
+    - coredns

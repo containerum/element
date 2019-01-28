@@ -1,0 +1,8 @@
+apiVersion: projectcalico.org/v3
+kind: BGPPeer
+metadata:
+  name: {{ inventory_hostname }}
+spec:
+  peerIP: {{ ansible_host }}
+  asNumber: 63400
+

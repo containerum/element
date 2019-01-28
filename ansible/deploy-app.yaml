@@ -1,0 +1,5 @@
+- hosts: masters
+  roles:
+    - app-helm
+  tags:
+    - app-helm

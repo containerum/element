@@ -1,0 +1,79 @@
+- name: Get etcd-ca cmd
+  shell: cat ~/{{ inventory_hostname }}/etcd-ca.crt | base64 -w0
+  register: etcd_ca_cmd
+
+- name: Get etcd-cert cmd - apiserver-etcd-client.crt
+  shell: cat ~/{{ inventory_hostname }}/apiserver-etcd-client.crt | base64 -w0
+  register: etcd_cert_cmd
+
+- name: Get etcd-key cmd - apiserver-etcd-client.key
+  shell: cat ~/{{ inventory_hostname }}/apiserver-etcd-client.key | base64 -w0
+  register: etcd_key_cmd
+
+- name: Generate calico.yaml
+  template:
+    src: calico_yaml.j2
+    dest: /tmp/calico.yaml
+
+- name: Generate rbac_calico.yaml
+  template:
+    src: rbac_calico.yaml
+    dest: /tmp/rbac_calico.yaml
+
+- name: Generate calicoctl.yaml
+  template:
+    src: calicoctl.yaml
+    dest: /tmp/calicoctl.yaml
+
+- name: Generate bgp_config.yaml
+  template:
+    src: bgp_config.yaml
+    dest: /tmp/bgp_config.yaml
+
+- name: Generate bgp_peer.yaml
+  template:
+    src: bgp_peer.yaml.j2
+    dest: /tmp/bgp_peer.yaml
+
+- name: Generate bird.conf
+  template:
+    src: bird.conf.j2
+    dest: /etc/bird.conf
+    backup: yes
+  become: yes
+
+- name: apply calico.yaml
+  command: kubectl apply -f /tmp/calico.yaml --kubeconfig=/home/{{ ansible_user }}/{{ inventory_hostname }}/admin.kubeconfig
+
+- name: apply rbac_calico.yaml
+  command: kubectl apply -f /tmp/rbac_calico.yaml --kubeconfig=/home/{{ ansible_user }}/{{ inventory_hostname }}/admin.kubeconfig
+
+- name: apply calicoctl.yaml
+  command: kubectl apply -f /tmp/calicoctl.yaml --kubeconfig=/home/{{ ansible_user }}/{{ inventory_hostname }}/admin.kubeconfig
+
+- name: Pause for 2 minutes to start calicoctl pod
+  pause:
+    minutes: 2
+
+- name: apply bgp_config.yaml
+  shell: cat /tmp/bgp_config.yaml | kubectl --kubeconfig=/home/{{ ansible_user }}/{{ inventory_hostname }}/admin.kubeconfig exec -ti -n kube-system calicoctl -- /calicoctl apply -f -
+
+- name: apply bgp_peer.yaml
+  shell: cat /tmp/bgp_peer.yaml | kubectl --kubeconfig=/home/{{ ansible_user }}/{{ inventory_hostname }}/admin.kubeconfig exec -ti -n kube-system calicoctl -- /calicoctl apply -f -
+
+- name: enable / started bird
+  systemd:
+    name: bird
+    state: restarted
+    enabled: yes
+  become: yes
+
+- name: delete bgp_config.yaml
+  file:
+    path: /tmp/bgp_config.yaml
+    state: absent
+
+- name: delete bgp_peer.yaml
+  file:
+    path: /tmp/bgp_peer.yaml
+    state: absent

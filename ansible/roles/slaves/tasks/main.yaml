@@ -1,0 +1,72 @@
+- name: Create dir /home/{{ ansible_user }}/{{ inventory_hostname }}/
+  file:
+    path: /home/{{ ansible_user }}/{{ inventory_hostname }}
+    state: directory
+
+- name: Extract archive slave cert / config to /home/{{ ansible_user }}/{{ inventory_hostname }}/
+  unarchive:
+    src: /home/{{ ansible_user }}/{{ inventory_hostname }}.tar.gz
+    dest: /home/{{ ansible_user }}/{{ inventory_hostname }}/
+    remote_src: yes
+#  become: yes
+
+- name: Find *.kubeconfig in /home/{{ ansible_user }}/{{ inventory_hostname }}/
+  find:
+    paths: /home/{{ ansible_user }}/{{ inventory_hostname }}/
+    patterns: '*.kubeconfig'
+  register: find_kubeconfig
+
+- name: Copy *.kubeconfig to /etc/kubernetes/
+  copy:
+    src: "{{ item.path }}"
+    dest: /etc/kubernetes/
+    remote_src: yes
+  with_items: "{{ find_kubeconfig.files }}"
+  become: yes
+
+- name: Find node.{crt,key} kube-proxy.{crt,key} ca.crt in /home/{{ ansible_user }}/{{ inventory_hostname }}/
+  find:
+    paths: /home/{{ ansible_user }}/{{ inventory_hostname }}/
+    patterns: 'node.crt,node.key,kube-proxy.crt,kube-proxy.key,ca.crt'
+  register: find_certs
+
+- name: Copy node.{crt,key} kube-proxy.{crt,key} ca.crt to /etc/kubernetes/pki
+  copy:
+    src: "{{ item.path }}"
+    dest: /etc/kubernetes/pki
+    remote_src: yes
+  with_items: "{{ find_certs.files }}"
+  become: yes
+
+- name: Generate /etc/sysconfig/kubelet config
+  template:
+    src: kubelet.j2
+    dest: /etc/sysconfig/kubelet
+    backup: yes
+  become: yes
+
+- name: systemd to reread configs
+  systemd:
+    daemon_reload: yes
+  become: yes
+
+- name: enable & start kubernetes.target
+  systemd:
+    name: kubernetes.target
+    state: restarted
+    enabled: yes
+  become: yes
+
+- name: enable & start kubelet
+  systemd:
+    name: kubelet
+    state: restarted
+    enabled: yes
+  become: yes
+
+- name: enable & start kube-proxy
+  systemd:
+    name: kube-proxy
+    state: restarted
+    enabled: yes
+  become: yes

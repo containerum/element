@@ -1,0 +1,36 @@
+- name: Generate kubelet config
+  shell: |
+    kubectl config set-cluster containerum --certificate-authority=./certs/master/ca.crt --embed-certs=true --server=https://{{ cloud_internal_ip }}:6443 --kubeconfig=./certs/{{ item }}/node.kubeconfig
+    kubectl config set-credentials system:node:{{ item }} --client-certificate=./certs/{{ item }}/node-kubeconfig.crt --client-key=./certs/{{ item }}/node-kubeconfig.key --embed-certs=true --kubeconfig=./certs/{{ item }}/node.kubeconfig
+    kubectl config set-context default --cluster=containerum --user=system:node:{{ item }} --kubeconfig=./certs/{{ item }}/node.kubeconfig
+    kubectl config use-context default --kubeconfig=./certs/{{ item }}/node.kubeconfig
+  loop: "{{ groups['slaves'] }}"
+
+- name: Generate kube-proxy config
+  shell: |
+    kubectl config set-cluster containerum --certificate-authority=./certs/master/ca.crt --embed-certs=true --server=https://{{ cloud_internal_ip }}:6443 --kubeconfig=./certs/kube-proxy.kubeconfig
+    kubectl config set-credentials system:kube-proxy --client-certificate=./certs/master/kube-proxy.crt --client-key=./certs/master/kube-proxy.key --embed-certs=true --kubeconfig=./certs/kube-proxy.kubeconfig
+    kubectl config set-context default --cluster=containerum --user=system:kube-proxy --kubeconfig=./certs/kube-proxy.kubeconfig
+    kubectl config use-context default --kubeconfig=./certs/kube-proxy.kubeconfig
+
+- name: Generate controller-manager config
+  shell: |
+    kubectl config set-cluster containerum --certificate-authority=./certs/master/ca.crt --embed-certs=true --server=https://{{ cloud_internal_ip }}:6443 --kubeconfig=./certs/master/kube-controller-manager.kubeconfig
+    kubectl config set-credentials system:kube-controller-manager --client-certificate=./certs/master/kube-controller-manager.crt --client-key=./certs/master/kube-controller-manager.key --embed-certs=true --kubeconfig=./certs/master/kube-controller-manager.kubeconfig
+    kubectl config set-context default --cluster=containerum --user=system:kube-controller-manager --kubeconfig=./certs/master/kube-controller-manager.kubeconfig
+    kubectl config use-context default --kubeconfig=./certs/master/kube-controller-manager.kubeconfig
+
+- name: Generate scheduler config
+  shell: |
+    kubectl config set-cluster containerum --certificate-authority=./certs/master/ca.crt --embed-certs=true --server=https://{{ cloud_internal_ip }}:6443 --kubeconfig=./certs/master/kube-scheduler.kubeconfig
+    kubectl config set-credentials system:kube-scheduler --client-certificate=./certs/master/kube-scheduler.crt --client-key=./certs/master/kube-scheduler.key --embed-certs=true --kubeconfig=./certs/master/kube-scheduler.kubeconfig
+    kubectl config set-context default --cluster=containerum --user=system:kube-scheduler --kubeconfig=./certs/master/kube-scheduler.kubeconfig
+    kubectl config use-context default --kubeconfig=./certs/master/kube-scheduler.kubeconfig
+
+- name: Generate admin config
+  shell: |
+    kubectl config set-cluster containerum --certificate-authority=./certs/master/ca.crt --embed-certs=true --server=https://{{ cloud_external_ip }}:{{ k8s_api_external_port }} --kubeconfig=./certs/master/admin.kubeconfig
+    kubectl config set-credentials admin --client-certificate=./certs/master/admin.crt --client-key=./certs/master/admin.key --embed-certs=true --kubeconfig=./certs/master/admin.kubeconfig
+    kubectl config set-context default --cluster=containerum --user=admin --kubeconfig=./certs/master/admin.kubeconfig
+    kubectl config use-context default --kubeconfig=./certs/master/admin.kubeconfig
+

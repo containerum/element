@@ -1,0 +1,136 @@
+- name: Create dir /home/{{ ansible_user }}/{{ inventory_hostname }}/
+  file:
+    path: /home/{{ ansible_user }}/{{ inventory_hostname }}
+    state: directory
+
+- name: Extract archive master cert / config to /home/{{ ansible_user }}/{{ inventory_hostname }}/
+  unarchive:
+    src: /home/{{ ansible_user }}/{{ inventory_hostname }}.tar.gz
+    dest: /home/{{ ansible_user }}/{{ inventory_hostname }}/
+    remote_src: yes
+#  become: yes
+
+- name: Find *.kubeconfig in /home/{{ ansible_user }}/{{ inventory_hostname }}/
+  find:
+    paths: /home/{{ ansible_user }}/{{ inventory_hostname }}/
+    patterns: '*.kubeconfig'
+  register: find_kubeconfig
+
+- name: Copy *.kubeconfig to /etc/kubernetes/
+  copy:
+    src: "{{ item.path }}"
+    dest: /etc/kubernetes/
+    remote_src: yes
+  with_items: "{{ find_kubeconfig.files }}"
+  become: yes
+
+- name: Find *.crt *.key sa.* in /home/{{ ansible_user }}/{{ inventory_hostname }}/
+  find:
+    paths: /home/{{ ansible_user }}/{{ inventory_hostname }}/
+    patterns: '*.crt,*.key,sa.*'
+  register: find_certs
+
+- name: Copy *.crt *.key sa.* to /etc/kubernetes/pki
+  copy:
+    src: "{{ item.path }}"
+    dest: /etc/kubernetes/pki
+    remote_src: yes
+  with_items: "{{ find_certs.files }}"
+  become: yes
+
+- name: Generate kube-apiserver config
+  template:
+    src: kube-apiserver.j2
+    dest: /etc/sysconfig/kube-apiserver
+    backup: yes
+  become: yes
+
+- name: Generate kube-controller-manager config
+  template:
+    src: kube-controller-manager.j2
+    dest: /etc/sysconfig/kube-controller-manager
+    backup: yes
+  become: yes
+
+- name: systemd to reread configs
+  systemd:
+    daemon_reload: yes
+  become: yes
+
+- name: enable & restart service kubernetes.target
+  systemd:
+    name: kubernetes.target
+    state: restarted
+    enabled: yes
+  become: yes
+
+- name: enable & restart service kube-apiserver.service
+  systemd:
+    name: kube-apiserver.service
+    state: restarted
+    enabled: yes
+  become: yes
+
+- name: enable & restart service kube-controller-manager.service
+  systemd:
+    name: kube-controller-manager.service
+    state: restarted
+    enabled: yes
+  become: yes
+
+- name: enable & restart service kube-scheduler.service
+  systemd:
+    name: kube-scheduler.service
+    state: restarted
+    enabled: yes
+  become: yes
+
+- name: Set local acces master server in config admin.kubeconfig
+  replace:
+    path: /home/{{ ansible_user }}/{{ inventory_hostname }}/admin.kubeconfig
+    regexp: '(server: https://)(\d+).(\d+).(\d+).(\d+):(\d+)'
+    replace: 'server: https://{{ ansible_host }}:6443'
+    backup: yes
+
+- name: Pause 2 minute, waiting for the start of services k8s
+  pause:
+    minutes: 2
+
+- name: Copy ClusterRole.yaml to master node
+  template:
+    src: ClusterRole.yaml
+    dest: /tmp/ClusterRole.yaml
+
+- name: Copy ClusterRoleBinding.yaml to master node
+  template:
+    src: ClusterRoleBinding.yaml
+    dest: /tmp/ClusterRoleBinding.yaml
+
+- name: apply ClusterRole
+  command: kubectl apply -f /tmp/ClusterRole.yaml --kubeconfig=/home/{{ ansible_user }}/{{ inventory_hostname }}/admin.kubeconfig
+
+- name: apply ClusterRoleBinding.yaml
+  command: kubectl apply -f /tmp/ClusterRoleBinding.yaml --kubeconfig=/home/{{ ansible_user }}/{{ inventory_hostname }}/admin.kubeconfig
+
+- name: delete ClusterRole.yaml
+  file:
+    path: /tmp/ClusterRole.yaml
+    state: absent
+
+- name: delete ClusterRoleBinding.yaml
+  file:
+    path: /tmp/ClusterRoleBinding.yaml
+    state: absent
+
+- name:  Create a directory $HOME/.kube
+  file:
+    path: $HOME/.kube
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: copy /home/{{ ansible_user }}/{{ inventory_hostname }}/admin.kubeconfig to $HOME/.kube/config
+  copy:
+    src: /home/{{ ansible_user }}/{{ inventory_hostname }}/admin.kubeconfig
+    dest: $HOME/.kube/config
+    remote_src: yes
