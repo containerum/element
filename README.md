@@ -20,6 +20,7 @@ Containerum Element installs the latest stable versions of the aforementioned co
 ## Requirements:
 **Local machine**
 - Ansible >=2.7
+- [Cert Machine](https://github.com/nkmazur/cert_machine)
 
 **Nodes:**
 - CentOS 7
