@@ -1,4 +1,3 @@
-
 [![License Apache 2.0](https://img.shields.io/github/license/containerum/element.svg)](https://github.com/containerum/element/blob/master/LICENSE)
 [![Twitter Follow](https://img.shields.io/twitter/follow/containerumcom.svg?style=social&label=Follow)](https://twitter.com/Containerumcom)
 
@@ -138,7 +137,7 @@ hostname_from_the_inventory_file
 Containerum Element has been tested with:
  - vCloud
 
-If you have found a bug, please open an issue. If you have questions about Containerum Element or Kubernetes Distribution by Containerum, you can join us on [Telegram](https://t.me/joinchat/DHMHbEb8Q3EUpb3qWDzc5A).
+If you have found a bug, please open an issue. If you have questions about Containerum Element or Kubernetes Distribution by Containerum, you can join us on [Telegram](https://t.me/containerum).
 
 You will also find lots of useful information on Kubernetes on our [Medium blog](medium.com/containerum).
 

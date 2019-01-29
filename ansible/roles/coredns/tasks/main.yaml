@@ -1,0 +1,12 @@
+- name: Generate & copy coredns.yaml to host
+  template:
+    src: coredns.yaml
+    dest: /tmp/coredns.yaml
+
+- name: apply coredns.yaml
+  command: kubectl apply -f /tmp/coredns.yaml --kubeconfig=/home/{{ ansible_user }}/{{ groups.masters | first }}/admin.kubeconfig
+
+- name: delete coredns.yaml
+  file:
+    path: /tmp/coredns.yaml
+    state: absent

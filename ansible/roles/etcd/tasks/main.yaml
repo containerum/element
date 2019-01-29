@@ -1,0 +1,47 @@
+- name: Generate and copy etcd.conf to servers
+  template: src=etcd.conf.j2 dest=/etc/etcd/etcd.conf
+  become: yes
+
+- name:  Create a directory /etc/ssl/etcd/
+  file:
+    path: /etc/ssl/etcd/
+    state: directory
+    owner: etcd
+    group: etcd
+  become: yes
+
+- name: change /var/lib/etcd  ownership, group
+  file:
+    path: /var/lib/etcd
+    owner: etcd
+    group: etcd
+  become: yes
+
+- name: Extract archive etcd certs into /etc/ssl/etcd/
+  unarchive:
+    src: /home/{{ ansible_user }}/{{ inventory_hostname }}-etcd.tar.gz
+    dest: /etc/ssl/etcd
+    remote_src: yes
+    owner: etcd
+    group: etcd
+    mode: 0640
+  become: yes
+
+- name: copy etcd-ca.crt to /etc/kubernetes/pki
+  copy:
+    src: /etc/ssl/etcd/etcd-ca.crt
+    dest: /etc/kubernetes/pki
+    remote_src: yes
+  become: yes
+
+- name: systemd to reread configs
+  systemd:
+    daemon_reload: yes
+  become: yes
+
+- name: enable service etcd
+  systemd:
+    name: etcd
+    state: restarted
+    enabled: yes
+  become: yes

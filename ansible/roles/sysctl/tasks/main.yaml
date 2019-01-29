@@ -1,0 +1,29 @@
+- name: Enable net.ipv4.ip_forward
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    sysctl_set: yes
+    state: present
+    reload: yes
+  become: yes
+
+- name: Enable net.bridge.bridge-nf-call-ip6tables
+  sysctl:
+    name: net.bridge.bridge-nf-call-ip6tables
+    value: 1
+    sysctl_set: yes
+    state: present
+    reload: yes
+    ignoreerrors: yes
+  become: yes
+
+- name: Enable net.bridge.bridge-nf-call-iptables
+  sysctl:
+    name: net.bridge.bridge-nf-call-iptables
+    value: 1
+    sysctl_set: yes
+    state: present
+    reload: yes
+    ignoreerrors: yes
+  become: yes
+

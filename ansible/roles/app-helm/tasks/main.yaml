@@ -1,0 +1,63 @@
+- name: Download and unarchive Helm distr version {{ helm_version }}
+  unarchive:
+    src: https://storage.googleapis.com/kubernetes-helm/helm-v{{ helm_version }}-linux-amd64.tar.gz
+    creates: ~/linux-amd64/
+    dest: ~/
+    remote_src: yes
+
+- name: Install Helm to /usr/local/bin
+  copy:
+    src: /home/{{ ansible_user }}/linux-amd64/helm
+    dest: /usr/local/bin/helm
+    owner: root
+    group: root
+    mode: u=rwx,g=rx,o=rx
+    remote_src: yes
+  become: yes
+
+- name: Delete Helm distr
+  file:
+    path: /home/{{ ansible_user }}/linux-amd64/
+    state: absent
+
+- name: Create dir /home/{{ ansible_user }}/HELM-CA
+  file:
+    path: /home/{{ ansible_user }}/HELM-CA
+    state: directory
+
+- name: Create helm home dir /home/{{ ansible_user }}/.helm
+  file:
+    path: /home/{{ ansible_user }}/.helm
+    state: directory
+
+- name: Generate ssl certificate for Helm
+  shell: |
+    cd /home/{{ ansible_user }}/HELM-CA
+    openssl genrsa -out ./ca.key.pem 4096
+    openssl req -key ca.key.pem -new -x509 -days 7300 -subj '/O=tiller/CN=tiller' -sha256 -out ca.cert.pem -extensions v3_ca
+    openssl genrsa -out ./tiller.key.pem 4096
+    openssl genrsa -out ./helm.key.pem 4096
+    openssl req -key tiller.key.pem -new -sha256 -out tiller.csr.pem -subj '/O=Tiller Server/CN=tiller-server'
+    openssl req -key helm.key.pem -new -sha256 -out helm.csr.pem -subj '/CN=helm'
+    openssl x509 -req -CA ca.cert.pem -CAkey ca.key.pem -CAcreateserial -in tiller.csr.pem -out tiller.cert.pem -days 365
+    openssl x509 -req -CA ca.cert.pem -CAkey ca.key.pem -CAcreateserial -in helm.csr.pem -out helm.cert.pem  -days 365
+    cp ca.cert.pem `helm home`/ca.pem
+    cp helm.cert.pem `helm home`/cert.pem
+    cp helm.key.pem `helm home`/key.pem
+
+- name: Generate helm_cluteraccount.yaml
+  template:
+    src: helm_cluteraccount.yaml
+    dest: /tmp/helm_cluteraccount.yaml
+
+- name: apply helm_cluteraccount.yaml
+  command: kubectl apply -f /tmp/helm_cluteraccount.yaml --kubeconfig=/home/{{ ansible_user }}/{{ inventory_hostname }}/admin.kubeconfig
+
+- name: delete helm_cluteraccount.yaml
+  file:
+    path: /tmp/helm_cluteraccount.yaml
+    state: absent
+
+- name: Init Helm
+  shell: /usr/local/bin/helm init --tiller-tls --tiller-tls-cert /home/{{ ansible_user }}/HELM-CA/tiller.cert.pem --tiller-tls-key /home/{{ ansible_user }}/HELM-CA/tiller.key.pem --tiller-tls-verify --tls-ca-cert /home/{{ ansible_user }}/HELM-CA/ca.cert.pem --service-account=tiller
+
