@@ -3,7 +3,7 @@
 
 ![Containerum logo](logo.svg)
 ## What is Containerum Element?
-Containerum Element is a set of Ansible scripts for bootstrapping a minimum stable Kubernetes cluster. It is based on the certified Kubernetes Distribution by Containerum (read more about KDC at [Containerum website](https://en.containerum.com)).
+Containerum Element is a set of Ansible scripts for bootstrapping a **minimum** stable Kubernetes cluster. It is based on the certified Kubernetes Distribution by Containerum (read more about KDC at [Containerum website](https://en.containerum.com)).
 
 Containerum Elements installs a Kubernetes cluster with the following components:
  - **[Kubernetes Distribution by Containerum](https://en.containerum.com)** 1.11.6
