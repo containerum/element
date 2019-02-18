@@ -2,6 +2,8 @@
 [![Twitter Follow](https://img.shields.io/twitter/follow/containerumcom.svg?style=social&label=Follow)](https://twitter.com/Containerumcom)
 
 ![Containerum logo](logo.svg)
+**Please note: The packages are being moved to another registry. Containerum Element is temporarily unavailable.**
+
 ## What is Containerum Element?
 Containerum Element is a set of Ansible scripts for bootstrapping a minimum stable Kubernetes cluster. It is based on the certified Kubernetes Distribution by Containerum (read more about KDC at [Containerum website](https://en.containerum.com)).
 
