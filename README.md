@@ -2,6 +2,7 @@
 [![Twitter Follow](https://img.shields.io/twitter/follow/containerumcom.svg?style=social&label=Follow)](https://twitter.com/Containerumcom)
 
 ![Containerum logo](logo.svg)
+
 **Please note: The packages are being moved to another registry. Containerum Element is temporarily unavailable.**
 
 ## What is Containerum Element?
